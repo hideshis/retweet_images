@@ -1,13 +1,40 @@
 from config import default
 from package.twitterapi import twitter_api
-
+import datetime
 
 # フォローしているアカウントのIDリストを取得する
 def get_friend_screen_name_list():
     twitter = twitter_api.TwitterApi()
     screen_name_list = twitter.get_friend_screen_name_list()
-    return screen_name_list
+    position = get_position()
+    return split_list(screen_name_list, 4)[position] # IDリストを4分割する。また、スクリプト実行時の時間に応じて、分割したリストのうちどの部分リストを対象とするか決定する
 
+def get_position():
+    position = -1
+    t_now = str(datetime.datetime.now().time())[:2]
+    if t_now == "5":
+        position = 0
+    elif t_now == "11":
+        position = 1
+    elif t_now == "18":
+        position = "2"
+    elif t_now == "21":
+        position = 3
+    return position
+
+'''
+リストlistをn等分する
+実行例：
+>>> a = range(16)
+>>> split_list(a,5)
+[[0, 1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]
+docs: http://muscle199x.blog.fc2.com/blog-entry-70.html
+'''
+def split_list (list,n):
+    list_size = len(list)
+    a = list_size // n # aは、list_sizeをnで割った時の商
+    b = list_size % n # bは、list_sizeをnで割った時の剰余
+    return [list[i*a + (i if i < b else b):(i+1)*a + (i+1 if i < b else b)] for i in range(n)]
 
 # リツイート対象のツイートIDリストを取得する
 def get_target_tweet_id_list(screen_name):

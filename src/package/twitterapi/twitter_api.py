@@ -35,6 +35,12 @@ class TwitterApi():
         }
         return timeline_dict
 
+    '''
+    GET /2/tweets/search/recent APIは、15分間に180回実行することができる。
+    本APIが実行される回数は、twitterアカウントのfriends数と同じである。
+    docs: https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
+    docs: https://developer.twitter.com/ja/docs/basics/rate-limiting
+    '''
     def recent_search(self, screen_name):
         url = "https://api.twitter.com/2/tweets/search/recent"
         headers = {
@@ -60,8 +66,10 @@ class TwitterApi():
         return retweet_target_id_list
 
     """
+    POST statuses/retweet/:idは、3時間に300回実行することができる。
     retweetリクエストは、すでにリツイート済みのツイートに対して実行したとき327エラー(You have already retweeted this Tweet.)が返される。
     リツイート取り消し操作にはならない。
+    docs: https://developer.twitter.com/en/docs/twitter-api/v1/tweets/post-and-engage/api-reference/post-statuses-retweet-id
     """
     def retweet(self, tweet_id):
         url = "https://api.twitter.com/1.1/statuses/retweet/" + tweet_id + ".json"
@@ -100,13 +108,24 @@ class TwitterApi():
         response = requests.get(url, headers=headers, params=params)
         return response.json()
 
+    '''
+    GET friends/list APIは、一度に200friends分の情報を取得することができ、15分間の間に15回まで実行することができる。
+    従って、現状では200[friends/回] * 15[回] = 3,000[friends]まで対応している。
+    もしアカウントのfriends数が3,000を超えた場合は、別途対応が必要となる。
+    docs: https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-friends-list
+    '''
     def get_friend_screen_name_list(self):
-        url = "https://api.twitter.com/1.1/friends/list.json?count=200"
-        response = self.oauth1.get(url)
-        user_list = response.json()['users']
+        base_url = "https://api.twitter.com/1.1/friends/list.json?count=200"
+        cursor = "-1"
         screen_name_list = []
-        for user in user_list:
-            screen_name_list.append(user['screen_name'])
+        
+        while cursor != "0":
+            url = base_url + "&cursor=" + cursor
+            response = self.oauth1.get(url)
+            user_list = response.json()['users']
+            cursor = response.json()['next_cursor_str']
+            for user in user_list:
+                screen_name_list.append(user['screen_name'])
         return screen_name_list
 
     def get_authentications(self):
