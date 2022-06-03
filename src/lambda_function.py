@@ -11,13 +11,13 @@ def get_friend_screen_name_list():
 
 def get_position():
     position = -1
-    t_now = str(datetime.datetime.now().time())[:2]
+    t_now = str(datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).time())[:2]
     if t_now == "5":
         position = 0
     elif t_now == "11":
         position = 1
     elif t_now == "18":
-        position = "2"
+        position = 2
     elif t_now == "21":
         position = 3
     return position
